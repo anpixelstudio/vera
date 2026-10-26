@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AiAssistantController;
 use App\Http\Controllers\AnalysisController;
+use App\Http\Controllers\Auth\SignedEmailVerificationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\InvitationController;
@@ -21,6 +22,11 @@ use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
+
+// Guest-friendly verification (email clients open links while logged out).
+Route::get('email/confirm/{id}/{hash}', SignedEmailVerificationController::class)
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.confirm');
 
 Route::middleware(['auth', 'verified.optional', 'tenant:optional'])->group(function () {
     Route::get('organizations/none', [OrganizationController::class, 'none'])->name('organizations.none');

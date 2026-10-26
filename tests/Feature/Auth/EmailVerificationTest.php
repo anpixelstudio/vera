@@ -59,6 +59,26 @@ class EmailVerificationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
     }
 
+    public function test_guest_can_confirm_email_from_signed_link_without_prior_login(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        Event::fake();
+
+        $url = URL::temporarySignedRoute(
+            'verification.confirm',
+            now()->addMinutes(60),
+            ['id' => $user->id, 'hash' => sha1($user->email)],
+        );
+
+        $response = $this->get($url);
+
+        Event::assertDispatched(Verified::class);
+        $this->assertTrue($user->fresh()->hasVerifiedEmail());
+        $this->assertAuthenticatedAs($user);
+        $response->assertRedirect(route('dashboard', absolute: false).'?verified=1');
+    }
+
     public function test_email_is_not_verified_with_invalid_hash()
     {
         $user = User::factory()->unverified()->create();
